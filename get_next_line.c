@@ -11,8 +11,6 @@
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdlib.h>
-#include <unistd.h>
 
 static int	ft_get_len(const int fd, char **line)
 {
