@@ -1,83 +1,56 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: apoque <marvin@42.fr>                      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/11/22 12:28:49 by apoque            #+#    #+#             */
-/*   Updated: 2017/12/04 13:41:08 by apoque           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "get_next_line.h"
 
-size_t		ft_strlen(const char *s)
+int		ft_error(const int fd, char **line, char **str)
 {
-	const char	*str;
-	size_t		i;
-
-	str = (const char *)s;
-	i = 0;
-	while (str[i] != '\0')
-		i++;
-	return (i);
+	if (fd == -1 || line == NULL)
+		return (-1);
+	if (!*str)
+		if (!(str = (char **)malloc(sizeof(char) * (BUFF_SIZE + 1))))
+			return (-1);
+		else
+			return (1);
 }
 
-char		*ft_strjoin(char const *s1, char const *s2)
+char	*ft_join(char *str, const int fd)
 {
-	int		size;
-	int		i;
-	int		j;
-	char	*str;
+	int		ret;
+	char	*buff;
 
-	if (!s1 || !s2)
+	if (!(buff = (char *)malloc(sizeof(char) * (BUFF_SIZE + 1))))
 		return (NULL);
-	i = 0;
-	j = 0;
-	size = (int)ft_strlen(s1) + (int)ft_strlen(s2);
-	str = (char *)malloc(sizeof(char) * (size + 1));
-	if (!str)
-		return (NULL);
-	while (s1[i] != '\0')
+	while((ret = read(fd, buff, BUFF_SIZE + 1)) > 0)
 	{
-		str[i] = s1[i];
-		i++;
+		buff[ret] = '\0';
+		str = ft_strjoin(str, buff);
 	}
-	while (s2[j] != '\0')
-	{
-		str[i + j] = s2[j];
-		j++;
-	}
-	str[size] = '\0';
-	return (&str[0]);
+	return (str);
 }
 
-static int	ft_get_len(const	int fd, char **line)
+int		get_next_line(const int fd, char **line)
 {
-	int		i;
-	char	*buf2;
+	static char	*str;
+	int			i;
 
+	if(ft_error(fd, line, &str) == -1)
+		return (-1);
+	if(*str)
+		ft_strcpy(*line, str);
+	str = ft_join(str, fd);
 	i = 0;
-	buf2 = (char *)malloc(sizeof(char) * (BUFF_SIZE + 1));
-	read(fd, buf2, BUFF_SIZE);
-	buf2[BUFF_SIZE] = '\0';
-	*line = ft_strjoin(*line, buf2);
-	while (*line[i] != '\n' && *line[i] != '\0')
-		i++;
-	if (*line[i] == '\0')
+	if (str[i])
 	{
-		ft_get_len(fd, line);
+		while (str[i] != '\n' && str[i] != '\0')
+			i++;
+		if (i == 0)
+			(*line) = ft_strdup("");
+		else
+		{
+			(*line) = ft_strsub(str, 0, i);
+			str = &str[i + 1];
+		}
+		return (1)
 	}
-	while (*line[i] != '\0')
-	{
-		*line[i] = '\0';
-		i++;
-	}
-}
-
-int			get_next_line(const int fd, char **line)
-{
-	*line = "";
-	ft_get_len(fd, line);
+	else
+		(*line) = ft_strdup("");
+	return (0);
 }
